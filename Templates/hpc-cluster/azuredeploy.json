@@ -244,9 +244,108 @@
          "metadata":{
             "description":"Path to use for BeeGFS storage."
          }
+      },
+      "hpcacmPortalNameLabel": {
+          "type": "string",
+          "metadata": {
+              "description": "The DSN name label"
+          },
+          "defaultValue": "hpcacm"
+      },
+      "frontendGroupName": {
+          "type": "string",
+          "defaultValue": "hpcacmfrontendgroup",
+          "metadata": {
+              "description": "Name for the frontend container group"
+          }
+      },
+      "frontendName": {
+          "type": "string",
+          "metadata": {
+              "description": "Name for the frontend container"
+          },
+          "defaultValue": "frontend"
+      },
+      "frontendImageName": {
+          "type": "string",
+          "metadata": {
+              "description": "Name for the frontend image"
+          },
+          "defaultValue": "evancui/hpcacm:frontend"
+      },
+      "frontendPort": {
+          "type": "string",
+          "metadata": {
+              "description": "Port to open on the frontend container and the public IP address."
+          },
+          "defaultValue": "443"
+      },
+      "backendGroupName": {
+          "type": "string",
+          "defaultValue": "hpcacmbackendgroup",
+          "metadata": {
+              "description": "Name for the backend container group"
+          }
+      },
+      "jobMonitorName": {
+          "type": "string",
+          "metadata": {
+              "description": "Name for the jobmonitor container"
+          },
+          "defaultValue": "jobmonitor"
+      },
+      "jobMonitorImageName": {
+          "type": "string",
+          "metadata": {
+              "description": "Name for the jobmonitor image"
+          },
+          "defaultValue": "evancui/hpcacm:jobmonitor"
+      },
+      "taskDispatcherName": {
+          "type": "string",
+          "metadata": {
+              "description": "Name for the taskdispatcher container"
+          },
+          "defaultValue": "taskdispatcher"
+      },
+      "taskDispatcherImageName": {
+          "type": "string",
+          "metadata": {
+              "description": "Name for the taskdispatcher image"
+          },
+          "defaultValue": "evancui/hpcacm:taskdispatcher"
+      },
+      "dashboardName": {
+          "type": "string",
+          "metadata": {
+              "description": "Name for the dashboard container"
+          },
+          "defaultValue": "dashboard"
+      },
+      "dashboardImageName": {
+          "type": "string",
+          "metadata": {
+              "description": "Name for the dashboard image"
+          },
+          "defaultValue": "evancui/hpcacm:dashboard"
+      },
+      "cpuCores": {
+          "type": "string",
+          "metadata": {
+              "description": "The number of CPU cores to allocate to the container."
+          },
+          "defaultValue": "1.0"
+      },
+      "memoryInGb": {
+          "type": "string",
+          "metadata": {
+              "description": "The amount of memory to allocate to the container in gigabytes."
+          },
+          "defaultValue": "1.5"
       }
    },
    "variables":{
+      "storageAccountName":"[concat(uniqueString(resourceGroup().id), 'sa')]",
       "imagePublisher":"[split(parameters('image'), ':')[0]]",
       "imageOffer":"[split(parameters('image'), ':')[1]]",
       "imageSku":"[split(parameters('image'), ':')[2]]",
@@ -303,6 +402,166 @@
             "platformUpdateDomainCount":"2",
             "managed":"true"
          }
+      },
+      {
+          "type": "Microsoft.Storage/storageAccounts",
+          "name": "[parameters('storageAccountName')]",
+          "apiVersion": "2017-10-01",
+          "location": "[resourceGroup().location]",
+          "sku": {
+              "name": "[parameters('storageAccountType')]"
+          },
+          "kind": "Storage",
+          "properties": {}
+      },
+      {
+          "name": "[parameters('frontendGroupName')]",
+          "type": "Microsoft.ContainerInstance/containerGroups",
+          "apiVersion": "2018-06-01",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+              "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
+          ],
+          "properties": {
+              "containers": [
+                  {
+                      "name": "[parameters('frontendName')]",
+                      "properties": {
+                          "command": [],
+                          "image": "[parameters('frontendImageName')]",
+                          "ports": [
+                              {
+                                  "port": "[parameters('frontendPort')]"
+                              }
+                          ],
+                          "resources": {
+                              "requests": {
+                                  "cpu": "[parameters('cpuCores')]",
+                                  "memoryInGB": "[parameters('memoryInGb')]"
+                              }
+                          },
+                          "environmentVariables":[
+                              {
+                                  "name": "ServerOptions__Password",
+                                  "secureValue": "[parameters('rootPassword')]"
+                              },
+                              {
+                                  "name": "CloudOptions__Storage__AccountName",
+                                  "value": "[parameters('storageAccountName')]"
+                              },
+                              {
+                                  "name": "CloudOptions__Storage__KeyValue",
+                                  "secureValue": "[listKeys(resourceId([resourceGroup().name], 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                              },
+                              {
+                                  "name": "fqdn",
+                                  "value": "[concat(parameters('hpcacmPortalNameLabel'), '.', [resourceGroup().location], '.azurecontainer.io')]"
+                              },
+                              {
+                                  "name": "apibase",
+                                  "value": "[concat('https://', parameters('hpcacmPortalNameLabel'), '.', [resourceGroup().location], '.azurecontainer.io/v1')]"
+                              }
+                          ]
+                      }
+                  }
+              ],
+              "osType": "Linux",
+              "restartPolicy": "OnFailure",
+              "ipAddress": {
+                  "type": "Public",
+                  "dnsNameLabel": "[parameters('hpcacmPortalNameLabel')]",
+                  "ports": [
+                      {
+                          "protocol": "TCP",
+                          "port": "443"
+                      }
+                  ]
+              }
+          }
+      },
+      {
+          "name": "[parameters('backendGroupName')]",
+          "type": "Microsoft.ContainerInstance/containerGroups",
+          "apiVersion": "2018-06-01",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+              "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
+          ],
+          "properties": {
+              "containers": [
+                  {
+                      "name": "[parameters('dashboardName')]",
+                      "properties": {
+                          "command": [],
+                          "image": "[parameters('dashboardImageName')]",
+                          "resources": {
+                              "requests": {
+                                  "cpu": "[parameters('cpuCores')]",
+                                  "memoryInGB": "[parameters('memoryInGb')]"
+                              }
+                          },
+                          "environmentVariables":[
+                              {
+                                  "name": "CloudOptions__Storage__AccountName",
+                                  "value": "[parameters('storageAccountName')]"
+                              },
+                              {
+                                  "name": "CloudOptions__Storage__KeyValue",
+                                  "secureValue": "[listKeys(resourceId([resourceGroup().name], 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                              }
+                          ]
+                      }
+                  },
+                  {
+                      "name": "[parameters('taskDispatcherName')]",
+                      "properties": {
+                          "command": [],
+                          "image": "[parameters('taskDispatcherImageName')]",
+                          "resources": {
+                              "requests": {
+                                  "cpu": "[parameters('cpuCores')]",
+                                  "memoryInGB": "[parameters('memoryInGb')]"
+                              }
+                          },
+                          "environmentVariables":[
+                              {
+                                  "name": "CloudOptions__Storage__AccountName",
+                                  "value": "[parameters('storageAccountName')]"
+                              },
+                              {
+                                  "name": "CloudOptions__Storage__KeyValue",
+                                  "secureValue": "[listKeys(resourceId([resourceGroup().name], 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                              }
+                          ]
+                      }
+                  },
+                  {
+                      "name": "[parameters('jobMonitorName')]",
+                      "properties": {
+                          "command": [],
+                          "image": "[parameters('jobMonitorImageName')]",
+                          "resources": {
+                              "requests": {
+                                  "cpu": "[parameters('cpuCores')]",
+                                  "memoryInGB": "[parameters('memoryInGb')]"
+                              }
+                          },
+                          "environmentVariables":[
+                              {
+                                  "name": "CloudOptions__Storage__AccountName",
+                                  "value": "[parameters('storageAccountName')]"
+                              },
+                              {
+                                  "name": "CloudOptions__Storage__KeyValue",
+                                  "secureValue": "[listKeys(resourceId([resourceGroup().name], 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                              }
+                          ]
+                      }
+                  }
+              ],
+              "osType": "Linux",
+              "restartPolicy": "OnFailure"
+          }
       },
       {
          "apiVersion":"[variables('armApiVersion')]",
@@ -523,6 +782,22 @@
       {
          "apiVersion":"[variables('computeApiVersion')]",
          "type":"Microsoft.Compute/virtualMachines/extensions",
+         "name":"[concat(variables('masterVMName'), '/HpcAcmAgent')]",
+         "location":"[resourceGroup().location]",
+         "dependsOn":[
+            "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMName'))]"
+         ],
+         "properties":{
+            "publisher":"Microsoft.HpcPack",
+            "type":"HpcAcmAgent",
+            "typeHandlerVersion":"1.0",
+            "settings":{
+            }
+         }
+      },
+      {
+         "apiVersion":"[variables('computeApiVersion')]",
+         "type":"Microsoft.Compute/virtualMachines/extensions",
          "name":"[concat(variables('workerVMName'), copyindex(), '/Installation')]",
          "location":"[resourceGroup().location]",
          "dependsOn":[
@@ -542,6 +817,26 @@
                   "[concat(variables('templateBaseUrl'), 'azuredeploy.sh')]"
                ],
                "commandToExecute":"[variables('installationCLI')]"
+            }
+         }
+      },
+      {
+         "apiVersion":"[variables('computeApiVersion')]",
+         "type":"Microsoft.Compute/virtualMachines/extensions",
+         "name":"[concat(variables('workerVMName'), copyindex(), '/HpcAcmAgent')]",
+         "location":"[resourceGroup().location]",
+         "dependsOn":[
+            "[concat('Microsoft.Compute/virtualMachines/', variables('workerVMName'), copyindex())]"
+         ],
+         "copy":{
+            "name":"foo",
+            "count":"[parameters('workerNodeCount')]"
+         },
+         "properties":{
+            "publisher":"Microsoft.HpcPack",
+            "type":"HpcAcmAgent",
+            "typeHandlerVersion":"1.0",
+            "settings":{
             }
          }
       },
