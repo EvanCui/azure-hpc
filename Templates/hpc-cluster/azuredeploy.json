@@ -455,11 +455,11 @@
                               },
                               {
                                   "name": "fqdn",
-                                  "value": "[concat(parameters('hpcacmPortalNameLabel'), '.', [resourceGroup().location], '.azurecontainer.io')]"
+                                  "value": "[concat(parameters('hpcacmPortalNameLabel'), '.', resourceGroup().location, '.azurecontainer.io')]"
                               },
                               {
                                   "name": "apibase",
-                                  "value": "[concat('https://', parameters('hpcacmPortalNameLabel'), '.', [resourceGroup().location], '.azurecontainer.io/v1')]"
+                                  "value": "[concat('https://', parameters('hpcacmPortalNameLabel'), '.', resourceGroup().location, '.azurecontainer.io/v1')]"
                               }
                           ]
                       }
