@@ -689,6 +689,9 @@
          "type":"Microsoft.Compute/virtualMachines",
          "name":"[variables('masterVMName')]",
          "location":"[resourceGroup().location]",
+         "tags": {
+             "StorageConfiguration": "[concat('{\"AccountName\":\"', variables('storageAccountName'), '\" }')]"
+         },
          "dependsOn":[
             "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]",
             "[concat('Microsoft.Compute/availabilitySets/', variables('avSetName'))]",
@@ -872,6 +875,9 @@
          "type":"Microsoft.Compute/virtualMachines",
          "name":"[concat(variables('workerVMName'), copyindex())]",
          "location":"[resourceGroup().location]",
+         "tags": {
+             "StorageConfiguration": "[concat('{\"AccountName\":\"', variables('storageAccountName'), '\" }')]"
+         },
          "dependsOn":[
             "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), 'worker', copyindex())]",
             "[concat('Microsoft.Compute/availabilitySets/', variables('avSetName'))]",
