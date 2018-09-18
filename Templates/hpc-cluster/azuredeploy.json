@@ -443,7 +443,7 @@
                           "environmentVariables":[
                               {
                                   "name": "ServerOptions__Password",
-                                  "secureValue": "[parameters('rootPassword')]"
+                                  "secureValue": "[parameters('adminPassword')]"
                               },
                               {
                                   "name": "CloudOptions__Storage__AccountName",
