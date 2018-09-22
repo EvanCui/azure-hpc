@@ -869,7 +869,7 @@
         },
         {
             "apiVersion": "2018-01-01-preview",
-            "name": "[concat(variables('masterVMName'), '/Microsoft.Authorization/', guid(resourceGroup().id))]",
+            "name": "guid(resourceGroup().id))]",
             "type": "Microsoft.Authorization/roleAssignments",
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMName'))]",
@@ -883,7 +883,7 @@
         },
         {
             "apiVersion": "2018-01-01-preview",
-            "name": "[concat(variables('workerVMName'), copyindex(), '/Microsoft.Authorization/', guid(resourceGroup().id))]",
+            "name": "guid(resourceGroup().id))]",
             "type": "Microsoft.Authorization/roleAssignments",
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', variables('workerVMName'), copyindex())]",
