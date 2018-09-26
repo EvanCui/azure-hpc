@@ -442,6 +442,10 @@
                             },
                             "environmentVariables": [
                                 {
+                                    "name": "ServerOptions__Username",
+                                    "value": "[parameters('adminUserName')]"
+                                },
+                                {
                                     "name": "ServerOptions__Password",
                                     "secureValue": "[parameters('adminPassword')]"
                                 },
