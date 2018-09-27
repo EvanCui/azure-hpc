@@ -26,6 +26,13 @@
                 "description": "Admin password. Pick a complex password with uppercase letters, lowercase letters, digits, and symbols. The password should not be longer than 16. Otherwise you'll get a BadRequest error."
             }
         },
+        "acmPortalNameLabel": {
+            "type": "string",
+            "metadata": {
+                "description": "The DSN name label. This label should be unique in the deployment location, or leave empty then the deployment process will generate an unique string."
+            },
+            "defaultValue": ""
+        },
         "hpcUserName": {
             "type": "string",
             "defaultValue": "hpc",
@@ -245,13 +252,6 @@
                 "description": "Path to use for BeeGFS storage."
             }
         },
-        "hpcacmPortalNameLabel": {
-            "type": "string",
-            "metadata": {
-                "description": "The DSN name label"
-            },
-            "defaultValue": "hpcacm"
-        },
         "frontendGroupName": {
             "type": "string",
             "defaultValue": "hpcacmfrontendgroup",
@@ -345,6 +345,7 @@
         }
     },
     "variables": {
+        "generatedDnsNameLabel": "[if(empty(parameters('acmPortalNameLabel')), uniqueString(resourceGroup().id), parameters('acmPortalNameLabel'))]",
         "storageAccountName": "[concat(uniqueString(resourceGroup().id), 'sa')]",
         "imagePublisher": "[split(parameters('image'), ':')[0]]",
         "imageOffer": "[split(parameters('image'), ':')[1]]",
@@ -459,11 +460,11 @@
                                 },
                                 {
                                     "name": "fqdn",
-                                    "value": "[concat(parameters('hpcacmPortalNameLabel'), '.', resourceGroup().location, '.azurecontainer.io')]"
+                                    "value": "[concat(variables('generatedDnsNameLabel'), '.', resourceGroup().location, '.azurecontainer.io')]"
                                 },
                                 {
                                     "name": "apibase",
-                                    "value": "[concat('https://', parameters('hpcacmPortalNameLabel'), '.', resourceGroup().location, '.azurecontainer.io/v1')]"
+                                    "value": "[concat('https://', variables('generatedDnsNameLabel'), '.', resourceGroup().location, '.azurecontainer.io/v1')]"
                                 }
                             ]
                         }
@@ -473,7 +474,7 @@
                 "restartPolicy": "OnFailure",
                 "ipAddress": {
                     "type": "Public",
-                    "dnsNameLabel": "[parameters('hpcacmPortalNameLabel')]",
+                    "dnsNameLabel": "[variables('generatedDnsNameLabel')]",
                     "ports": [
                         {
                             "protocol": "TCP",
@@ -986,5 +987,11 @@
                 }
             }
         }
-    ]
+    ],
+    "outputs": {
+        "portalUri": {
+            "type": "string",
+            "value": "[concat('https://', reference(resourceId('Microsoft.ContainerInstance/containerGroups/', parameters('frontendGroupName'))).ipAddress.fqdn, '/')]"
+        }
+    }
 }
