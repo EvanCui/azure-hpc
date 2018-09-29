@@ -372,7 +372,7 @@ install_scheduler()
     if [ "$SCHEDULER" == "Slurm" ]; then
         install_munge
         install_slurm
-    elif [ "$SCHEDULER" == "PBSPro-OS" ]; then
+    elif [ "$SCHEDULER" == "PBSPro-OSS" ]; then
         install_pbsoss
     else
         echo "Invalid scheduler specified: $SCHEDULER"
