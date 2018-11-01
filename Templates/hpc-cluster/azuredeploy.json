@@ -271,7 +271,7 @@
             "metadata": {
                 "description": "Name for the frontend image"
             },
-            "defaultValue": "evancui/hpcacm:frontend"
+            "defaultValue": "mcr.microsoft.com/hpcpack/hpcacm:frontend"
         },
         "frontendPort": {
             "type": "string",
@@ -299,7 +299,7 @@
             "metadata": {
                 "description": "Name for the jobmonitor image"
             },
-            "defaultValue": "evancui/hpcacm:jobmonitor"
+            "defaultValue": "mcr.microsoft.com/hpcpack/hpcacm:jobmonitor"
         },
         "taskDispatcherName": {
             "type": "string",
@@ -313,7 +313,7 @@
             "metadata": {
                 "description": "Name for the taskdispatcher image"
             },
-            "defaultValue": "evancui/hpcacm:taskdispatcher"
+            "defaultValue": "mcr.microsoft.com/hpcpack/hpcacm:taskdispatcher"
         },
         "dashboardName": {
             "type": "string",
@@ -327,7 +327,7 @@
             "metadata": {
                 "description": "Name for the dashboard image"
             },
-            "defaultValue": "evancui/hpcacm:dashboard"
+            "defaultValue": "mcr.microsoft.com/hpcpack/hpcacm:dashboard"
         },
         "cpuCores": {
             "type": "string",
